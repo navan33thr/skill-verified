@@ -1,5 +1,6 @@
 import { ShieldCheck, Calendar, Award } from "lucide-react";
 import { format } from "date-fns";
+import { QRCodeSVG } from "qrcode.react";
 import { CertStatus } from "@/lib/certificate";
 
 interface Props {
