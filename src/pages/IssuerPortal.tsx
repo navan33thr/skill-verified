@@ -148,6 +148,7 @@ export default function IssuerPortal() {
 function IssueForm({ issuerName, userId, onIssued }: { issuerName: string; userId: string; onIssued: () => void }) {
   const [loading, setLoading] = useState(false);
   const today = format(new Date(), "yyyy-MM-dd");
+  const [file, setFile] = useState<File | null>(null);
   const [form, setForm] = useState({
     recipient_name: "",
     recipient_email: "",
