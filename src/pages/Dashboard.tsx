@@ -105,12 +105,11 @@ export default function Dashboard() {
                       description={c.description}
                     />
                     {c.file_url && (
-                      <Button asChild size="sm" variant="outline" className="w-full">
-                        <a href={c.file_url} target="_blank" rel="noopener noreferrer">
-                          <FileDown className="mr-1.5 h-3.5 w-3.5" />
-                          Download verified {c.file_type === "pdf" ? "PDF" : "image"}
-                        </a>
-                      </Button>
+                      <DownloadButtons
+                        fileUrl={c.file_url}
+                        fileType={(c.file_type as "pdf" | "image") || "pdf"}
+                        baseName={`${c.recipient_name.replace(/\s+/g, "_")}_${c.certificate_code}`}
+                      />
                     )}
                   </div>
                 );
