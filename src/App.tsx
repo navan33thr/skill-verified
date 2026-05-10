@@ -9,6 +9,7 @@ import Auth from "./pages/Auth.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import IssuerPortal from "./pages/IssuerPortal.tsx";
 import Verify from "./pages/Verify.tsx";
+import ScanTest from "./pages/ScanTest.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/issuer" element={<IssuerPortal />} />
             <Route path="/verify" element={<Verify />} />
+            <Route path="/scan-test" element={<ScanTest />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
