@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
-import { Award, Share2, Copy, Check, ExternalLink, TrendingUp } from "lucide-react";
+import { Award, Share2, Copy, Check, ExternalLink, TrendingUp, FileDown } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -23,6 +23,8 @@ type Cert = {
   expiration_date: string | null;
   revoked: boolean;
   description: string | null;
+  file_url: string | null;
+  file_type: string | null;
 };
 
 export default function Dashboard() {
@@ -101,6 +103,14 @@ export default function Dashboard() {
                       certificateCode={c.certificate_code}
                       description={c.description}
                     />
+                    {c.file_url && (
+                      <Button asChild size="sm" variant="outline" className="w-full">
+                        <a href={c.file_url} target="_blank" rel="noopener noreferrer">
+                          <FileDown className="mr-1.5 h-3.5 w-3.5" />
+                          Download verified {c.file_type === "pdf" ? "PDF" : "image"}
+                        </a>
+                      </Button>
+                    )}
                   </div>
                 );
               })}

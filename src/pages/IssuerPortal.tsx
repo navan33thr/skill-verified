@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { StatusBadge } from "@/components/StatusBadge";
 import { generateCertificateCode, getCertStatus } from "@/lib/certificate";
+import { stampFile } from "@/lib/stamp";
 import { toast } from "sonner";
 
 const issueSchema = z.object({
@@ -147,6 +148,7 @@ export default function IssuerPortal() {
 function IssueForm({ issuerName, userId, onIssued }: { issuerName: string; userId: string; onIssued: () => void }) {
   const [loading, setLoading] = useState(false);
   const today = format(new Date(), "yyyy-MM-dd");
+  const [file, setFile] = useState<File | null>(null);
   const [form, setForm] = useState({
     recipient_name: "",
     recipient_email: "",
@@ -165,24 +167,59 @@ function IssueForm({ issuerName, userId, onIssued }: { issuerName: string; userI
     }
     setLoading(true);
     const code = generateCertificateCode();
-    const { error } = await supabase.from("certificates").insert({
-      issuer_id: userId,
-      issuer_name: issuerName,
-      certificate_code: code,
-      recipient_name: parsed.data.recipient_name,
-      recipient_email: parsed.data.recipient_email.toLowerCase(),
-      skill_name: parsed.data.skill_name,
-      description: parsed.data.description || null,
-      issue_date: parsed.data.issue_date,
-      expiration_date: parsed.data.expiration_date || null,
-    });
-    setLoading(false);
-    if (error) {
-      toast.error(error.message);
+    const { data: inserted, error } = await supabase
+      .from("certificates")
+      .insert({
+        issuer_id: userId,
+        issuer_name: issuerName,
+        certificate_code: code,
+        recipient_name: parsed.data.recipient_name,
+        recipient_email: parsed.data.recipient_email.toLowerCase(),
+        skill_name: parsed.data.skill_name,
+        description: parsed.data.description || null,
+        issue_date: parsed.data.issue_date,
+        expiration_date: parsed.data.expiration_date || null,
+      })
+      .select("id")
+      .single();
+    if (error || !inserted) {
+      setLoading(false);
+      toast.error(error?.message ?? "Failed to issue");
       return;
     }
+
+    // Optional: stamp uploaded file with QR + watermark and store it
+    if (file) {
+      try {
+        const verifyUrl = `${window.location.origin}/verify?code=${code}`;
+        const { blob, ext, type } = await stampFile(file, {
+          code,
+          recipientName: parsed.data.recipient_name,
+          skillName: parsed.data.skill_name,
+          verifyUrl,
+        });
+        const path = `${userId}/${inserted.id}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("certificate-files")
+          .upload(path, blob, {
+            contentType: type === "pdf" ? "application/pdf" : "image/png",
+            upsert: true,
+          });
+        if (upErr) throw upErr;
+        const { data: pub } = supabase.storage.from("certificate-files").getPublicUrl(path);
+        await supabase
+          .from("certificates")
+          .update({ file_url: pub.publicUrl, file_type: type })
+          .eq("id", inserted.id);
+      } catch (err: any) {
+        toast.error(`Issued, but file stamping failed: ${err.message ?? err}`);
+      }
+    }
+
+    setLoading(false);
     toast.success(`Certificate ${code} issued`);
     setForm({ ...form, recipient_name: "", recipient_email: "", skill_name: "", description: "" });
+    setFile(null);
     onIssued();
   }
 
@@ -220,6 +257,18 @@ function IssueForm({ issuerName, userId, onIssued }: { issuerName: string; userI
           <div>
             <Label htmlFor="ed">Expiration (optional)</Label>
             <Input id="ed" type="date" value={form.expiration_date} onChange={upd("expiration_date")} />
+          </div>
+          <div className="sm:col-span-2">
+            <Label htmlFor="cf">Certificate file (optional — image or PDF)</Label>
+            <Input
+              id="cf"
+              type="file"
+              accept="image/*,application/pdf"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              We'll stamp it with a "Verified by Certify" watermark and a QR code that links to the verification page.
+            </p>
           </div>
           <div className="sm:col-span-2">
             <Button type="submit" disabled={loading} variant="success">

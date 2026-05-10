@@ -1,5 +1,6 @@
 import { ShieldCheck, Calendar, Award } from "lucide-react";
 import { format } from "date-fns";
+import { QRCodeSVG } from "qrcode.react";
 import { CertStatus } from "@/lib/certificate";
 
 interface Props {
@@ -66,16 +67,24 @@ export function CertificateCard(p: Props) {
           </div>
         </div>
 
-        <div className="flex items-end justify-between border-t pt-5">
+        <div className="flex items-end justify-between gap-4 border-t pt-5">
           <div>
             <div className="text-xs uppercase tracking-wider text-muted-foreground">Issued by</div>
             <div className="mt-1 text-sm font-semibold">{p.issuerName}</div>
-          </div>
-          <div className="text-right">
-            <div className="text-xs uppercase tracking-wider text-muted-foreground">Certificate ID</div>
+            <div className="mt-3 text-xs uppercase tracking-wider text-muted-foreground">Certificate ID</div>
             <div className="mt-1 font-mono text-sm font-bold tracking-wider text-primary">
               {p.certificateCode}
             </div>
+          </div>
+          <div className="flex flex-col items-center">
+            <div className="rounded-md border bg-white p-1.5">
+              <QRCodeSVG
+                value={`${typeof window !== "undefined" ? window.location.origin : ""}/verify?code=${p.certificateCode}`}
+                size={68}
+                level="M"
+              />
+            </div>
+            <div className="mt-1 text-[9px] uppercase tracking-wider text-muted-foreground">Scan to verify</div>
           </div>
         </div>
       </div>
