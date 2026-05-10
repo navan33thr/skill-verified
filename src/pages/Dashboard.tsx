@@ -124,6 +124,32 @@ export default function Dashboard() {
   );
 }
 
+function DownloadButtons({ fileUrl, fileType, baseName }: { fileUrl: string; fileType: "pdf" | "image"; baseName: string }) {
+  const [busy, setBusy] = useState<"pdf" | "jpg" | null>(null);
+  async function go(fmt: "pdf" | "jpg") {
+    setBusy(fmt);
+    try {
+      await downloadVerifiedFile(fileUrl, fileType, fmt, baseName);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Download failed");
+    } finally {
+      setBusy(null);
+    }
+  }
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <Button size="sm" variant="outline" onClick={() => go("pdf")} disabled={!!busy}>
+        {busy === "pdf" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <FileDown className="mr-1.5 h-3.5 w-3.5" />}
+        PDF
+      </Button>
+      <Button size="sm" variant="outline" onClick={() => go("jpg")} disabled={!!busy}>
+        {busy === "jpg" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <ImageIcon className="mr-1.5 h-3.5 w-3.5" />}
+        JPG
+      </Button>
+    </div>
+  );
+}
+
 function StatCard({ icon: Icon, label, value, accent }: { icon: any; label: string; value: number; accent?: boolean }) {
   return (
     <div className={`flex items-center gap-3 rounded-xl border bg-card px-5 py-3 shadow-cert ${accent ? "border-success/30" : ""}`}>
