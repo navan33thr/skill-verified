@@ -259,6 +259,18 @@ function IssueForm({ issuerName, userId, onIssued }: { issuerName: string; userI
             <Input id="ed" type="date" value={form.expiration_date} onChange={upd("expiration_date")} />
           </div>
           <div className="sm:col-span-2">
+            <Label htmlFor="cf">Certificate file (optional — image or PDF)</Label>
+            <Input
+              id="cf"
+              type="file"
+              accept="image/*,application/pdf"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              We'll stamp it with a "Verified by Certify" watermark and a QR code that links to the verification page.
+            </p>
+          </div>
+          <div className="sm:col-span-2">
             <Button type="submit" disabled={loading} variant="success">
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Issue Certificate
