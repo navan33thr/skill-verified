@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
-import { Award, Share2, Copy, Check, ExternalLink, TrendingUp, FileDown } from "lucide-react";
+import { Award, Share2, Copy, Check, ExternalLink, TrendingUp, FileDown, Image as ImageIcon, Loader2 } from "lucide-react";
+import { downloadVerifiedFile } from "@/lib/download";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -104,12 +105,11 @@ export default function Dashboard() {
                       description={c.description}
                     />
                     {c.file_url && (
-                      <Button asChild size="sm" variant="outline" className="w-full">
-                        <a href={c.file_url} target="_blank" rel="noopener noreferrer">
-                          <FileDown className="mr-1.5 h-3.5 w-3.5" />
-                          Download verified {c.file_type === "pdf" ? "PDF" : "image"}
-                        </a>
-                      </Button>
+                      <DownloadButtons
+                        fileUrl={c.file_url}
+                        fileType={(c.file_type as "pdf" | "image") || "pdf"}
+                        baseName={`${c.recipient_name.replace(/\s+/g, "_")}_${c.certificate_code}`}
+                      />
                     )}
                   </div>
                 );
@@ -120,6 +120,32 @@ export default function Dashboard() {
       </main>
 
       <ShareDialog cert={shareCert} onClose={() => setShareCert(null)} />
+    </div>
+  );
+}
+
+function DownloadButtons({ fileUrl, fileType, baseName }: { fileUrl: string; fileType: "pdf" | "image"; baseName: string }) {
+  const [busy, setBusy] = useState<"pdf" | "jpg" | null>(null);
+  async function go(fmt: "pdf" | "jpg") {
+    setBusy(fmt);
+    try {
+      await downloadVerifiedFile(fileUrl, fileType, fmt, baseName);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Download failed");
+    } finally {
+      setBusy(null);
+    }
+  }
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <Button size="sm" variant="outline" onClick={() => go("pdf")} disabled={!!busy}>
+        {busy === "pdf" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <FileDown className="mr-1.5 h-3.5 w-3.5" />}
+        PDF
+      </Button>
+      <Button size="sm" variant="outline" onClick={() => go("jpg")} disabled={!!busy}>
+        {busy === "jpg" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <ImageIcon className="mr-1.5 h-3.5 w-3.5" />}
+        JPG
+      </Button>
     </div>
   );
 }
