@@ -23,6 +23,8 @@ type Cert = {
   expiration_date: string | null;
   revoked: boolean;
   description: string | null;
+  file_url: string | null;
+  file_type: string | null;
 };
 
 export default function Dashboard() {
