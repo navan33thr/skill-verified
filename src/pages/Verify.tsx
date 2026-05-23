@@ -171,12 +171,19 @@ export default function Verify() {
                   description={cert.description}
                 />
                 {cert.file_url && (
-                  <Button asChild variant="outline" className="w-full">
-                    <a href={cert.file_url} target="_blank" rel="noopener noreferrer">
-                      <FileDown className="mr-2 h-4 w-4" />
-                      View original {cert.file_type === "pdf" ? "PDF" : "image"} (watermarked)
-                    </a>
-                  </Button>
+                  <>
+                    <DownloadButtons
+                      fileUrl={cert.file_url}
+                      fileType={(cert.file_type as "pdf" | "image") || "pdf"}
+                      baseName={`${cert.recipient_name.replace(/\s+/g, "_")}_${cert.certificate_code}`}
+                    />
+                    <Button asChild variant="ghost" className="w-full">
+                      <a href={cert.file_url} target="_blank" rel="noopener noreferrer">
+                        <FileDown className="mr-2 h-4 w-4" />
+                        View original {cert.file_type === "pdf" ? "PDF" : "image"} (watermarked)
+                      </a>
+                    </Button>
+                  </>
                 )}
               </div>
             ) : (
