@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Search, ShieldCheck, ArrowLeft, Upload, FileDown, Loader2 } from "lucide-react";
+import { Search, ShieldCheck, ArrowLeft, Upload, FileDown, Loader2, Image as ImageIcon } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
@@ -9,6 +9,7 @@ import { CertificateCard } from "@/components/CertificateCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { CertStatus, getCertStatus } from "@/lib/certificate";
 import { extractQrFromFile, codeFromQrPayload } from "@/lib/scan";
+import { downloadVerifiedFile } from "@/lib/download";
 import { toast } from "sonner";
 
 type Cert = {
@@ -170,12 +171,19 @@ export default function Verify() {
                   description={cert.description}
                 />
                 {cert.file_url && (
-                  <Button asChild variant="outline" className="w-full">
-                    <a href={cert.file_url} target="_blank" rel="noopener noreferrer">
-                      <FileDown className="mr-2 h-4 w-4" />
-                      View original {cert.file_type === "pdf" ? "PDF" : "image"} (watermarked)
-                    </a>
-                  </Button>
+                  <>
+                    <DownloadButtons
+                      fileUrl={cert.file_url}
+                      fileType={(cert.file_type as "pdf" | "image") || "pdf"}
+                      baseName={`${cert.recipient_name.replace(/\s+/g, "_")}_${cert.certificate_code}`}
+                    />
+                    <Button asChild variant="ghost" className="w-full">
+                      <a href={cert.file_url} target="_blank" rel="noopener noreferrer">
+                        <FileDown className="mr-2 h-4 w-4" />
+                        View original {cert.file_type === "pdf" ? "PDF" : "image"} (watermarked)
+                      </a>
+                    </Button>
+                  </>
                 )}
               </div>
             ) : (
@@ -192,6 +200,32 @@ export default function Verify() {
           </div>
         )}
       </main>
+    </div>
+  );
+}
+
+function DownloadButtons({ fileUrl, fileType, baseName }: { fileUrl: string; fileType: "pdf" | "image"; baseName: string }) {
+  const [busy, setBusy] = useState<"pdf" | "jpg" | null>(null);
+  async function go(fmt: "pdf" | "jpg") {
+    setBusy(fmt);
+    try {
+      await downloadVerifiedFile(fileUrl, fileType, fmt, baseName);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Download failed");
+    } finally {
+      setBusy(null);
+    }
+  }
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <Button variant="outline" onClick={() => go("pdf")} disabled={!!busy}>
+        {busy === "pdf" ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <FileDown className="mr-1.5 h-4 w-4" />}
+        Download PDF
+      </Button>
+      <Button variant="outline" onClick={() => go("jpg")} disabled={!!busy}>
+        {busy === "jpg" ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <ImageIcon className="mr-1.5 h-4 w-4" />}
+        Download JPG
+      </Button>
     </div>
   );
 }
