@@ -116,6 +116,21 @@ export type Database = {
         }
         Returns: boolean
       }
+      verify_certificate: {
+        Args: { _code: string }
+        Returns: {
+          certificate_code: string
+          description: string
+          expiration_date: string
+          file_type: string
+          file_url: string
+          issue_date: string
+          issuer_name: string
+          recipient_name: string
+          revoked: boolean
+          skill_name: string
+        }[]
+      }
     }
     Enums: {
       app_role: "learner" | "issuer" | "admin"
