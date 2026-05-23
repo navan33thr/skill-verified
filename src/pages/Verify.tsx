@@ -203,3 +203,29 @@ export default function Verify() {
     </div>
   );
 }
+
+function DownloadButtons({ fileUrl, fileType, baseName }: { fileUrl: string; fileType: "pdf" | "image"; baseName: string }) {
+  const [busy, setBusy] = useState<"pdf" | "jpg" | null>(null);
+  async function go(fmt: "pdf" | "jpg") {
+    setBusy(fmt);
+    try {
+      await downloadVerifiedFile(fileUrl, fileType, fmt, baseName);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Download failed");
+    } finally {
+      setBusy(null);
+    }
+  }
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <Button variant="outline" onClick={() => go("pdf")} disabled={!!busy}>
+        {busy === "pdf" ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <FileDown className="mr-1.5 h-4 w-4" />}
+        Download PDF
+      </Button>
+      <Button variant="outline" onClick={() => go("jpg")} disabled={!!busy}>
+        {busy === "jpg" ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <ImageIcon className="mr-1.5 h-4 w-4" />}
+        Download JPG
+      </Button>
+    </div>
+  );
+}
