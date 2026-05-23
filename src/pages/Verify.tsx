@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Search, ShieldCheck, ArrowLeft, Upload, FileDown, Loader2 } from "lucide-react";
+import { Search, ShieldCheck, ArrowLeft, Upload, FileDown, Loader2, Image as ImageIcon } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
@@ -9,6 +9,7 @@ import { CertificateCard } from "@/components/CertificateCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { CertStatus, getCertStatus } from "@/lib/certificate";
 import { extractQrFromFile, codeFromQrPayload } from "@/lib/scan";
+import { downloadVerifiedFile } from "@/lib/download";
 import { toast } from "sonner";
 
 type Cert = {
