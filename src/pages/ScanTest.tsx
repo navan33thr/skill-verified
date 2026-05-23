@@ -23,13 +23,10 @@ export default function ScanTest() {
   const fileInput = useRef<HTMLInputElement>(null);
 
   async function lookupCode(code: string) {
-    const { data } = await supabase
-      .from("certificates")
-      .select("recipient_name, skill_name, revoked")
-      .eq("certificate_code", code)
-      .maybeSingle();
-    return data
-      ? { found: true, recipient: data.recipient_name, skill: data.skill_name, revoked: data.revoked }
+    const { data } = await supabase.rpc("verify_certificate", { _code: code });
+    const row = data && data[0];
+    return row
+      ? { found: true, recipient: row.recipient_name, skill: row.skill_name, revoked: row.revoked }
       : { found: false };
   }
 
