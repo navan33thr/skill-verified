@@ -40,12 +40,10 @@ export default function Verify() {
     setLoading(true);
     setSearched(true);
     const { data } = await supabase
-      .from("certificates")
-      .select("recipient_name, skill_name, issuer_name, issue_date, expiration_date, certificate_code, revoked, description, file_url, file_type")
-      .eq("certificate_code", c.trim().toUpperCase())
-      .maybeSingle();
-    setCert(data);
-    setStatus(getCertStatus(data));
+      .rpc("verify_certificate", { _code: c.trim().toUpperCase() });
+    const row = (data && data[0]) || null;
+    setCert(row as Cert | null);
+    setStatus(getCertStatus(row));
     setLoading(false);
   }
 
